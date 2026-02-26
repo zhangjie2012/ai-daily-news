@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"ai-daily-news/fetcher"
 	"ai-daily-news/generator"
+	"ai-daily-news/summarizer"
 )
 
 func main() {
@@ -22,6 +24,15 @@ func main() {
 	if len(newsItems) == 0 {
 		log.Println("未获取到任何资讯，退出")
 		return
+	}
+
+	// LLM 摘要处理
+	sm := summarizer.NewSummarizer()
+	if sm.Enabled() {
+		log.Println("LLM API 已配置，开始生成中文摘要...")
+		processSummaries(sm, newsItems)
+	} else {
+		log.Println("LLM API 未配置，跳过摘要生成步骤")
 	}
 
 	dailyDir := "daily"
@@ -39,4 +50,36 @@ func main() {
 	}
 
 	log.Printf("AI 资讯日报生成完成: %s", filename)
+}
+
+func processSummaries(sm *summarizer.Summarizer, items []fetcher.NewsItem) {
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, 5) // 限制并发数为 5
+
+	for i := range items {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			semaphore <- struct{}{}        // 获取信号量
+			defer func() { <-semaphore }() // 释放信号量
+
+			item := &items[idx]
+			content := item.Summary
+			if content == "" {
+				content = item.Title
+			}
+
+			// 如果已经是中文且较短，可能不需要摘要，但在 AI 领域，通常英文居多
+			// 这里简单地全部调用，让 LLM 决定是否需要翻译或润色
+			summary, err := sm.Summarize(item.Title, content)
+			if err == nil && summary != "" {
+				item.Summary = summary
+				log.Printf("摘要生成成功: %s", item.Title)
+			} else {
+				log.Printf("摘要生成失败 [%s]: %v", item.Title, err)
+			}
+		}(i)
+	}
+
+	wg.Wait()
 }

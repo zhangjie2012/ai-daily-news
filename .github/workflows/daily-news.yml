@@ -40,6 +40,9 @@ jobs:
         env:
           PRODUCTHUNT_API_KEY: ${{ secrets.PRODUCTHUNT_API_KEY }}
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
 
       - name: Commit and push changes
         run: |
