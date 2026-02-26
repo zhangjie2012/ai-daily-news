@@ -3,6 +3,10 @@
 > 自动追踪全球 AI 领域最新动态，每日更新。
 > 内容涵盖：新模型、Agent、编程能力、开源项目等。
 
+## 📅 日报列表
+
+- [2026-02-26](daily/2026-02-26.md)
+
 ## 🌐 资讯来源
 
 本项目聚合了全球最权威的 AI 媒体、实验室博客和技术社区，力求提供最全最新的 AI 资讯：
@@ -36,9 +40,43 @@
 - **[Reddit r/MachineLearning](https://www.reddit.com/r/MachineLearning/)**: 严肃学术讨论
 - **[Reddit r/LocalLLaMA](https://www.reddit.com/r/LocalLLaMA/)**: 本地大模型实战
 
----
+## 🛠️ 实现原理
 
-### 配置环境变量（可选）
+本项目基于 Go 语言开发，利用 GitHub Actions 实现全自动运行。
+
+```mermaid
+graph TD
+    Daily[📅 Daily Trigger] --> Fetcher
+    
+    subgraph "Fetcher (Data Collection)"
+        F1[Official Blogs]
+        F2[Tech Media]
+        F3[arXiv/Papers]
+        F4[GitHub/HackerNews]
+    end
+    
+    Fetcher --> RawItems[Raw News Items]
+    
+    subgraph "LLM Processing"
+        RawItems --> Filter[AI Keyword Filter]
+        Filter --> Deduplicate[Deduplication]
+        Deduplicate --> Summarizer[DeepSeek/OpenAI Summarizer]
+    end
+    
+    Summarizer --> Generator[Markdown Generator]
+    Generator --> Report[📄 Daily Report]
+    Generator --> README[📄 README.md]
+    
+    style Daily fill:#f9f,stroke:#333,stroke-width:2px
+    style Summarizer fill:#bbf,stroke:#333,stroke-width:2px
+    style Report fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+## 🚀 配置说明
+
+如果你想自己部署，请参考以下配置：
+
+### 环境变量（可选）
 
 ```bash
 # Product Hunt API Key（可选，获取产品资讯）
@@ -50,7 +88,3 @@ export LLM_API_KEY=sk-xxxxxx
 export LLM_BASE_URL=https://api.deepseek.com/v1  # 默认为 OpenAI
 export LLM_MODEL=deepseek-chat                   # 默认为 gpt-3.5-turbo
 ```
-
-## 日报列表
-
-- [2026-02-26](daily/2026-02-26.md)
