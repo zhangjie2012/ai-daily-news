@@ -105,68 +105,16 @@ func GenerateDailyReport(filename, date string, items []fetcher.NewsItem) error 
 }
 
 func UpdateReadme(date, filename string) error {
-	readmePath := "README.md"
-
-	var content string
-	if _, err := os.Stat(readmePath); os.IsNotExist(err) {
-		content = generateReadmeHeader()
-	} else {
-		data, err := os.ReadFile(readmePath)
-		if err != nil {
-			return err
-		}
-		content = string(data)
-	}
-
-	entry := fmt.Sprintf("- [%s](%s) - %s\n", date, filename, time.Now().Format("2006-01-02"))
-
-	if strings.Contains(content, "## 📅 历史日报") {
-		lines := strings.Split(content, "\n")
-		var newLines []string
-		inserted := false
-
-		for _, line := range lines {
-			newLines = append(newLines, line)
-			if strings.Contains(line, "## 📅 历史日报") && !inserted {
-				newLines = append(newLines, entry)
-				inserted = true
-			}
-		}
-
-		if !inserted {
-			newLines = append(newLines, entry)
-		}
-
-		content = strings.Join(newLines, "\n")
-	} else {
-		content += "\n## 📅 历史日报\n\n" + entry
-	}
-
-	return os.WriteFile(readmePath, []byte(content), 0644)
+	return UpdateReadmeIndex()
 }
 
 func generateReadmeHeader() string {
 	return `# 🤖 AI 资讯日报
 
-> 自动追踪全球 AI 领域最新动态，每日更新
+> 自动追踪全球 AI 领域最新动态，每日更新。
+> 内容涵盖：新模型、Agent、编程能力、开源项目等。
 
-## 📖 简介
-
-本项目自动收集全球范围内的 AI 资讯，包括：
-
-- 🧠 新模型发布与更新
-- 💻 AI 编程能力进展
-- 🤖 Agent 技术发展
-- 🌟 热门开源项目
-- 🔧 新框架与工具
-- 📊 对开发者的实际影响
-
-## 🔔 订阅方式
-
-- Watch 本仓库获取更新通知
-- Star 本仓库表示支持
-
-## 📅 历史日报
+## 📅 日报列表
 
 `
 }
