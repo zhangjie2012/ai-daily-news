@@ -155,12 +155,23 @@ func NewRSSFetcher() *RSSFetcher {
 	return &RSSFetcher{
 		client: &http.Client{Timeout: 30 * time.Second},
 		sources: map[string]string{
+			// AI 官方博客
 			"OpenAI Blog":        "https://openai.com/index.xml",
 			"Anthropic Blog":     "https://www.anthropic.com/index.xml",
 			"Google DeepMind":    "https://deepmind.google/blog/rss.xml",
+			"Hugging Face Blog":  "https://huggingface.co/blog/feed.xml",
 			"Microsoft Research": "https://www.microsoft.com/en-us/research/feed/",
 			"Andrej Karpathy":    "https://karpathy.github.io/feed.xml",
-			"The Verge (AI)":     "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+
+			// 综合科技 + AI
+			"MIT Tech Review": "https://www.technologyreview.com/feed/",
+			"VentureBeat AI":  "https://venturebeat.com/category/ai/feed/",
+			"TechCrunch AI":   "https://techcrunch.com/category/artificial-intelligence/feed/",
+			"Ars Technica AI": "https://arstechnica.com/ai/feed/",
+			"The Verge AI":    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+
+			// 聚合社区
+			"Techmeme": "https://www.techmeme.com/feed.xml",
 		},
 	}
 }
