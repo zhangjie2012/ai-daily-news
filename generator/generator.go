@@ -109,12 +109,12 @@ func UpdateReadme(date, filename string) error {
 }
 
 func generateReadmeHeader() string {
-	return `# 🤖 AI 资讯日报
+	return `# AI 资讯日报
 
 > 自动追踪全球 AI 领域最新动态，每日更新。
 > 内容涵盖：新模型、Agent、编程能力、开源项目等。
 
-## 📅 日报列表
+## 日报列表
 
 `
 }
