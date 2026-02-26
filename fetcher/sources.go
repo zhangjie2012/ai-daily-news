@@ -27,7 +27,7 @@ func (f *HuggingFaceFetcher) Name() string {
 func (f *HuggingFaceFetcher) Fetch() ([]NewsItem, error) {
 	// Hugging Face Daily Papers API
 	url := "https://huggingface.co/api/daily_papers"
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -92,7 +92,7 @@ func (f *ArxivFetcher) Name() string {
 func (f *ArxivFetcher) Fetch() ([]NewsItem, error) {
 	// 查询 cs.AI (人工智能), cs.CL (计算语言学), cs.LG (机器学习)
 	apiURL := "http://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.CL+OR+cat:cs.LG&sortBy=submittedDate&sortOrder=descending&max_results=5"
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -128,7 +128,7 @@ func (f *ArxivFetcher) Fetch() ([]NewsItem, error) {
 		if len(summary) > 200 {
 			summary = summary[:200] + "..."
 		}
-		
+
 		pubTime, _ := time.Parse(time.RFC3339, entry.Published)
 
 		items = append(items, NewsItem{
@@ -155,12 +155,12 @@ func NewRSSFetcher() *RSSFetcher {
 	return &RSSFetcher{
 		client: &http.Client{Timeout: 30 * time.Second},
 		sources: map[string]string{
-			"OpenAI Blog":             "https://openai.com/index.xml",
-			"Anthropic Blog":          "https://www.anthropic.com/index.xml",
-			"Google DeepMind":         "https://deepmind.google/blog/rss.xml",
-			"Microsoft Research":      "https://www.microsoft.com/en-us/research/feed/",
-			"Andrej Karpathy":         "https://karpathy.github.io/feed.xml",
-			"The Verge (AI)":          "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+			"OpenAI Blog":        "https://openai.com/index.xml",
+			"Anthropic Blog":     "https://www.anthropic.com/index.xml",
+			"Google DeepMind":    "https://deepmind.google/blog/rss.xml",
+			"Microsoft Research": "https://www.microsoft.com/en-us/research/feed/",
+			"Andrej Karpathy":    "https://karpathy.github.io/feed.xml",
+			"The Verge (AI)":     "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
 		},
 	}
 }
@@ -171,7 +171,7 @@ func (f *RSSFetcher) Name() string {
 
 func (f *RSSFetcher) Fetch() ([]NewsItem, error) {
 	var items []NewsItem
-	
+
 	for sourceName, rssURL := range f.sources {
 		fetchedItems, err := f.fetchRSS(sourceName, rssURL)
 		if err != nil {
@@ -180,7 +180,7 @@ func (f *RSSFetcher) Fetch() ([]NewsItem, error) {
 		}
 		items = append(items, fetchedItems...)
 	}
-	
+
 	return items, nil
 }
 
@@ -200,65 +200,54 @@ func (f *RSSFetcher) fetchRSS(sourceName, rssURL string) ([]NewsItem, error) {
 	}
 	defer resp.Body.Close()
 
-	// 简单的 XML 解析结构，兼容 RSS 和 Atom
-	type Item struct {
-		Title       string `xml:"title"`
-		Link        string `xml:"link"` // RSS 2.0
-		LinkAtom    struct {
+	// 1. 定义 RSS 结构
+	type RItem struct {
+		Title   string `xml:"title"`
+		Link    string `xml:"link"`
+		PubDate string `xml:"pubDate"`
+	}
+
+	// 2. 定义 Atom 结构
+	type AEntry struct {
+		Title string `xml:"title"`
+		Link  struct {
 			Href string `xml:"href,attr"`
-		} `xml:"link"` // Atom
-		Description string `xml:"description"`
-		PubDate     string `xml:"pubDate"`
-		Updated     string `xml:"updated"` // Atom
+		} `xml:"link"`
+		Updated string `xml:"updated"`
 	}
 
-	type Channel struct {
-		Items []Item `xml:"item"` // RSS
-		Entries []Item `xml:"entry"` // Atom
-	}
-	
-	type Feed struct {
-		Channel Channel `xml:"channel"` // RSS
-		Entries []Item  `xml:"entry"`   // Atom (direct children)
+	// 3. 通用 Feed
+	type UniversalFeed struct {
+		// RSS 2.0
+		Channel struct {
+			Items []RItem `xml:"item"`
+		} `xml:"channel"`
+		// Atom
+		Entries []AEntry `xml:"entry"`
 	}
 
-	var feed Feed
+	var feed UniversalFeed
 	if err := xml.NewDecoder(resp.Body).Decode(&feed); err != nil {
 		return nil, err
 	}
 
-	// 合并 RSS 和 Atom 的条目
-	allEntries := append(feed.Channel.Items, feed.Channel.Entries...)
-	allEntries = append(allEntries, feed.Entries...)
-
 	var items []NewsItem
-	// 每个源只取最新的 2 条，避免刷屏
 	limit := 2
 	count := 0
-	
-	for _, entry := range allEntries {
+
+	processItem := func(title, link, dateStr string) {
 		if count >= limit {
-			break
+			return
 		}
 
-		link := entry.Link
-		if link == "" {
-			link = entry.LinkAtom.Href
-		}
-		
-		// 简单的日期解析尝试
 		pubTime := time.Now()
-		dateStr := entry.PubDate
-		if dateStr == "" {
-			dateStr = entry.Updated
-		}
 		if dateStr != "" {
-			// 尝试常见格式
 			formats := []string{
 				time.RFC1123,
 				time.RFC1123Z,
 				time.RFC3339,
 				"Mon, 02 Jan 2006 15:04:05 -0700",
+				"Mon, 02 Jan 2006 15:04:05 GMT",
 			}
 			for _, format := range formats {
 				if t, err := time.Parse(format, dateStr); err == nil {
@@ -268,20 +257,25 @@ func (f *RSSFetcher) fetchRSS(sourceName, rssURL string) ([]NewsItem, error) {
 			}
 		}
 
-		// 忽略太旧的新闻（超过 3 天）
 		if time.Since(pubTime) > 72*time.Hour {
-			continue
+			return
 		}
 
 		items = append(items, NewsItem{
-			Title:       "📰 " + strings.TrimSpace(entry.Title),
+			Title:       "📰 " + strings.TrimSpace(title),
 			Source:      sourceName,
 			URL:         strings.TrimSpace(link),
-			Summary:     "", // RSS summary 经常包含 HTML，简单起见先置空，让用户点进去看
 			PublishedAt: pubTime,
 			Category:    "官方博客",
 		})
 		count++
+	}
+
+	for _, item := range feed.Channel.Items {
+		processItem(item.Title, item.Link, item.PubDate)
+	}
+	for _, entry := range feed.Entries {
+		processItem(entry.Title, entry.Link.Href, entry.Updated)
 	}
 
 	return items, nil
