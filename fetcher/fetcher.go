@@ -29,6 +29,9 @@ type Fetcher interface {
 func FetchAllNews() ([]NewsItem, error) {
 	var allNews []NewsItem
 	fetchers := []Fetcher{
+		NewHuggingFaceFetcher(),
+		NewArxivFetcher(),
+		NewRSSFetcher(),
 		NewHackerNewsFetcher(),
 		NewRedditFetcher(),
 		NewGitHubTrendingFetcher(),
@@ -47,8 +50,8 @@ func FetchAllNews() ([]NewsItem, error) {
 	allNews = filterAINews(allNews)
 	allNews = deduplicateNews(allNews)
 
-	if len(allNews) > 30 {
-		allNews = allNews[:30]
+	if len(allNews) > 50 {
+		allNews = allNews[:50]
 	}
 
 	return allNews, nil
