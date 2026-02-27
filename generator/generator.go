@@ -18,6 +18,14 @@ const reportTemplate = `# AI 资讯日报 - {{.Date}}
 
 ---
 
+{{if .Briefing}}
+## 📋 今日简报
+
+{{.Briefing}}
+
+---
+
+{{end}}
 {{range .Categories}}
 ## {{.Name}}
 
@@ -54,11 +62,12 @@ type CategoryGroup struct {
 type ReportData struct {
 	Date        string
 	GeneratedAt string
+	Briefing    string
 	Categories  []CategoryGroup
 	TotalCount  int
 }
 
-func GenerateDailyReport(filename, date string, items []fetcher.NewsItem) error {
+func GenerateDailyReport(filename, date string, items []fetcher.NewsItem, briefing string) error {
 	categoryMap := make(map[string][]fetcher.NewsItem)
 	for _, item := range items {
 		categoryMap[item.Category] = append(categoryMap[item.Category], item)
@@ -82,6 +91,7 @@ func GenerateDailyReport(filename, date string, items []fetcher.NewsItem) error 
 	data := ReportData{
 		Date:        date,
 		GeneratedAt: time.Now().Format("2006-01-02 15:04:05"),
+		Briefing:    briefing,
 		Categories:  categories,
 		TotalCount:  len(items),
 	}

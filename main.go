@@ -26,11 +26,19 @@ func main() {
 		return
 	}
 
-	// LLM 摘要处理
+	var briefing string
 	sm := summarizer.NewSummarizer()
 	if sm.Enabled() {
 		log.Println("LLM API 已配置，开始生成中文摘要...")
 		processSummaries(sm, newsItems)
+
+		log.Println("正在生成今日简报...")
+		if b, err := sm.GenerateBriefing(newsItems); err != nil {
+			log.Printf("生成简报失败: %v", err)
+		} else {
+			briefing = b
+			log.Println("简报生成成功")
+		}
 	} else {
 		log.Println("LLM API 未配置，跳过摘要生成步骤")
 	}
@@ -41,7 +49,7 @@ func main() {
 	}
 
 	filename := fmt.Sprintf("%s/%s.md", dailyDir, today)
-	if err := generator.GenerateDailyReport(filename, today, newsItems); err != nil {
+	if err := generator.GenerateDailyReport(filename, today, newsItems, briefing); err != nil {
 		log.Fatalf("生成日报失败: %v", err)
 	}
 
