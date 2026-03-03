@@ -202,7 +202,7 @@ func generateReadmeFooter() string {
 
 本项目聚合了全球最权威的 AI 媒体、实验室博客和技术社区，力求提供最全最新的 AI 资讯：
 
-### 🗞️ 综合科技 + AI（核心）
+### 🗞️ 综合科技 + AI（国外）
 - **[MIT Technology Review](https://www.technologyreview.com/)**: 深度科技报道与分析
 - **[VentureBeat AI](https://venturebeat.com/category/ai/)**: 企业级 AI 应用与趋势
 - **[TechCrunch AI](https://techcrunch.com/category/artificial-intelligence/)**: 创业公司与投融资动态
@@ -210,7 +210,7 @@ func generateReadmeFooter() string {
 - **[Ars Technica AI](https://arstechnica.com/ai/)**: 深度技术评论
 - **[The Verge AI](https://www.theverge.com/ai-artificial-intelligence)**: 消费级 AI 产品新闻
 
-### 🏛️ AI 官方博客
+### 🏛️ AI 官方博客（国外）
 - **[OpenAI Blog](https://openai.com/blog)**: GPT 系列与 AGI 路线图
 - **[Google DeepMind](https://deepmind.google/discover/blog/)**: Gemini, AlphaFold 等基础研究
 - **[Anthropic News](https://www.anthropic.com/news)**: Claude 模型安全与更新
@@ -224,12 +224,21 @@ func generateReadmeFooter() string {
 - **[arXiv CS.LG](https://arxiv.org/list/cs.LG/recent)**: 机器学习最新预印本
 - **[arXiv CS.CL](https://arxiv.org/list/cs.CL/recent)**: 计算语言学最新预印本
 
-### 💡 高质量聚合 / 社区
+### 💡 高质量聚合 / 社区（国外）
 - **[Hacker News](https://news.ycombinator.com/)**: 极客视角的 AI 技术讨论
 - **[Techmeme](https://www.techmeme.com/)**: 科技新闻聚合（必读）
 - **[GitHub Trending](https://github.com/trending)**: 热门开源项目
 - **[Reddit r/MachineLearning](https://www.reddit.com/r/MachineLearning/)**: 严肃学术讨论
 - **[Reddit r/LocalLLaMA](https://www.reddit.com/r/LocalLLaMA/)**: 本地大模型实战
+
+### 🇨🇳 中国 AI 资讯（国内）
+- **[机器之心](https://www.jiqizhixin.com/)**: 中国领先的 AI 科技媒体
+- **[量子位](https://www.qbitai.com/)**: 前沿 AI 技术报道
+- **[新智元](https://www.jiqizhixin.com/)**: AI 产业资讯
+- **[InfoQ 中文](https://www.infoq.cn/)**: 技术深度文章
+- **[36氪 AI](https://36kr.com/)**: AI 创投动态
+- **[掘金](https://juejin.cn/)**: 开发者技术社区
+- **[V2EX](https://www.v2ex.com/)**: 创意工作者社区
 
 ## 🛠️ 实现原理
 
@@ -244,6 +253,7 @@ graph TD
         F2[Tech Media]
         F3[arXiv/Papers]
         F4[GitHub/HackerNews]
+        F5[中国资讯源]
     end
     
     Fetcher --> RawItems[Raw News Items]
