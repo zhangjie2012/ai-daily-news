@@ -172,6 +172,18 @@ func NewRSSFetcher() *RSSFetcher {
 
 			// 聚合社区
 			"Techmeme": "https://www.techmeme.com/feed.xml",
+
+			// 中国 AI 公司博客
+			"字节跳动技术团队":  "https://juejin.cn/rss/byte-tech?sort=newest",
+			"腾讯 AI Lab": "https://ai.tencent.com/ailab/rss.xml",
+			"阿里巴巴技术":    "https://developer.aliyun.com/rss/article",
+
+			// 中国科技媒体
+			"机器之心":     "https://www.jiqizhixin.com/rss",
+			"量子位":      "https://www.qbitai.com/feed",
+			"新智元":      "https://www.jiqizhixin.com/rss",
+			"InfoQ 中文": "https://www.infoq.cn/feed",
+			"36氪 AI":   "https://36kr.com/feed",
 		},
 	}
 }

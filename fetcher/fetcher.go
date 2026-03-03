@@ -1,6 +1,7 @@
 package fetcher
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -36,6 +37,8 @@ func FetchAllNews() ([]NewsItem, error) {
 		NewRedditFetcher(),
 		NewGitHubTrendingFetcher(),
 		NewProductHuntFetcher(),
+		NewV2EXFetcher(),
+		NewJuejinFetcher(),
 	}
 
 	for _, f := range fetchers {
@@ -59,6 +62,7 @@ func FetchAllNews() ([]NewsItem, error) {
 
 func filterAINews(items []NewsItem) []NewsItem {
 	keywords := []string{
+		// 英文关键词
 		"AI", "artificial intelligence", "machine learning", "ML",
 		"GPT", "LLM", "large language model", "ChatGPT", "Claude",
 		"agent", "Agent", "AGI", "deep learning", "neural network",
@@ -66,6 +70,16 @@ func filterAINews(items []NewsItem) []NewsItem {
 		"open source", "framework", "model", "coding", "developer",
 		"GitHub", "Hugging Face", "OpenAI", "Anthropic", "Google AI",
 		"Meta AI", "Microsoft AI", "Copilot", "Cursor",
+
+		// 中文关键词
+		"人工智能", "机器学习", "深度学习", "神经网络",
+		"大模型", "语言模型", "生成式", "AIGC",
+		"智能体", "Agent", "AGI", "GPT", "LLM",
+		"文心一言", "通义千问", "智谱", "月之暗面", "Kimi",
+		"字节", "豆包", "腾讯", "阿里", "百度",
+		"DeepSeek", "深度求索", "零一万物", "MiniMax",
+		"百川智能", "智源", "商汤", "旷视",
+		"开源", "模型", "算法", "训练", "推理",
 	}
 
 	var filtered []NewsItem
@@ -162,6 +176,153 @@ func (f *HackerNewsFetcher) Fetch() ([]NewsItem, error) {
 	}
 
 	return items, nil
+}
+
+type V2EXFetcher struct {
+	client *http.Client
+}
+
+func NewV2EXFetcher() *V2EXFetcher {
+	return &V2EXFetcher{
+		client: &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+func (f *V2EXFetcher) Name() string {
+	return "V2EX"
+}
+
+func (f *V2EXFetcher) Fetch() ([]NewsItem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	nodes := []string{"ai", "python", "programmer", "share"}
+	var items []NewsItem
+
+	for _, node := range nodes {
+		url := fmt.Sprintf("https://www.v2ex.com/api/topics/hot.json?node_name=%s", node)
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			continue
+		}
+		req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; AI-Daily-News-Bot/1.0)")
+
+		resp, err := f.client.Do(req)
+		if err != nil {
+			continue
+		}
+
+		var topics []struct {
+			Title string `json:"title"`
+			URL   string `json:"url"`
+			Node  struct {
+				Name string `json:"name"`
+			} `json:"node"`
+			Created int64 `json:"created"`
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&topics); err != nil {
+			resp.Body.Close()
+			continue
+		}
+		resp.Body.Close()
+
+		for _, topic := range topics {
+			items = append(items, NewsItem{
+				Title:       topic.Title,
+				Source:      "V2EX/" + topic.Node.Name,
+				URL:         topic.URL,
+				PublishedAt: time.Unix(topic.Created, 0),
+				Category:    "技术社区",
+			})
+		}
+	}
+
+	return items, nil
+}
+
+type JuejinFetcher struct {
+	client *http.Client
+}
+
+func NewJuejinFetcher() *JuejinFetcher {
+	return &JuejinFetcher{
+		client: &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+func (f *JuejinFetcher) Name() string {
+	return "掘金"
+}
+
+func (f *JuejinFetcher) Fetch() ([]NewsItem, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	reqBody := map[string]interface{}{
+		"id_type":  2,
+		"sort_type": 200,
+		"cate_id":   "6809637773935377416",
+		"cursor":    "0",
+		"limit":     20,
+	}
+	jsonBody, _ := json.Marshal(reqBody)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.juejin.cn/recommend_api/v1/article/recommend_cate_feed", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (compatible; AI-Daily-News-Bot/1.0)")
+
+	resp, err := f.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Data []struct {
+			ArticleID  string `json:"article_id"`
+			Title      string `json:"title"`
+			AuthorName string `json:"author_user_info"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	var items []NewsItem
+	for _, article := range result.Data {
+		items = append(items, NewsItem{
+			Title:       article.Title,
+			Source:      "掘金",
+			URL:         fmt.Sprintf("https://juejin.cn/post/%s", article.ArticleID),
+			PublishedAt: time.Now(),
+			Category:    "技术社区",
+		})
+	}
+
+	return items, nil
+}
+
+type WeixinFetcher struct {
+	client *http.Client
+}
+
+func NewWeixinFetcher() *WeixinFetcher {
+	return &WeixinFetcher{
+		client: &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+func (f *WeixinFetcher) Name() string {
+	return "微信公众号"
+}
+
+func (f *WeixinFetcher) Fetch() ([]NewsItem, error) {
+	return []NewsItem{}, nil
 }
 
 type RedditFetcher struct {
