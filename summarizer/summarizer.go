@@ -117,14 +117,41 @@ func (s *Summarizer) GenerateBriefing(items []fetcher.NewsItem) (string, error) 
 		return "", fmt.Errorf("LLM_API_KEY not set")
 	}
 
+	chineseSources := map[string]bool{
+		"机器之心": true, "量子位": true, "新智元": true,
+		"InfoQ 中文": true, "36氪 AI": true,
+		"字节跳动技术团队": true, "腾讯 AI Lab": true, "阿里巴巴技术": true,
+		"掘金": true, "V2EX": true,
+	}
+
+	var domesticItems, overseasItems []fetcher.NewsItem
+	for _, item := range items {
+		if chineseSources[item.Source] || strings.Contains(item.Source, "V2EX") {
+			domesticItems = append(domesticItems, item)
+		} else {
+			overseasItems = append(overseasItems, item)
+		}
+	}
+
 	var contentBuilder strings.Builder
-	contentBuilder.WriteString("以下是今日 AI 资讯列表：\n\n")
-	for i, item := range items {
-		if i >= 30 {
+	contentBuilder.WriteString("【国内资讯】\n")
+	for i, item := range domesticItems {
+		if i >= 15 {
 			break
 		}
-		contentBuilder.WriteString(fmt.Sprintf("%d. [%s] %s - %s\n", i+1, item.Source, item.Title, item.Summary))
-		if item.Summary != "" {
+		contentBuilder.WriteString(fmt.Sprintf("%d. [%s] %s\n", i+1, item.Source, item.Title))
+		if item.Summary != "" && len(item.Summary) > 20 {
+			contentBuilder.WriteString(fmt.Sprintf("   简介：%s\n", item.Summary))
+		}
+	}
+
+	contentBuilder.WriteString("\n【国外资讯】\n")
+	for i, item := range overseasItems {
+		if i >= 15 {
+			break
+		}
+		contentBuilder.WriteString(fmt.Sprintf("%d. [%s] %s\n", i+1, item.Source, item.Title))
+		if item.Summary != "" && len(item.Summary) > 20 {
 			contentBuilder.WriteString(fmt.Sprintf("   简介：%s\n", item.Summary))
 		}
 	}
@@ -132,11 +159,14 @@ func (s *Summarizer) GenerateBriefing(items []fetcher.NewsItem) (string, error) 
 	prompt := fmt.Sprintf(`请根据以下今日 AI 资讯列表，生成一份简洁的中文简报。
 
 要求：
-1. 总结今日 AI 领域的主要趋势和热点话题（3-5条）。
+1. 分别总结国内和国外 AI 领域的主要趋势和热点话题（各2-3条）。
 2. 每条趋势用一句话概括，突出关键信息。
 3. 如果有重大新闻（如新模型发布、重要收购、突破性研究），请特别标注。
 4. 语气专业、客观，适合技术人员阅读。
-5. 总字数控制在 200-400 字。
+5. 格式要求：
+   - 先输出"## 🌍 国外动态"，然后列出国外趋势
+   - 再输出"## 🇨🇳 国内动态"，然后列出国内趋势
+6. 总字数控制在 300-500 字。
 
 %s
 
@@ -149,7 +179,7 @@ func (s *Summarizer) GenerateBriefing(items []fetcher.NewsItem) (string, error) 
 			{"role": "user", "content": prompt},
 		},
 		"temperature": 0.5,
-		"max_tokens":  800,
+		"max_tokens":  1000,
 	}
 
 	jsonBody, _ := json.Marshal(reqBody)
