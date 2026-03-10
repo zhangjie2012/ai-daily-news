@@ -179,12 +179,31 @@ func NewRSSFetcher() *RSSFetcher {
 			"阿里巴巴技术":    "https://developer.aliyun.com/rss/article",
 
 			// 中国科技媒体
-			"机器之心":     "https://www.jiqizhixin.com/rss",
-			"量子位":      "https://www.qbitai.com/feed",
-			"新智元":      "https://www.jiqizhixin.com/rss",
-			"InfoQ 中文": "https://www.infoq.cn/feed",
-			"36氪 AI":   "https://36kr.com/feed",
-		},
+		"机器之心":     "https://www.jiqizhixin.com/rss",
+		"量子位":      "https://www.qbitai.com/feed",
+		"新智元":      "https://www.jiqizhixin.com/rss",
+		"InfoQ 中文": "https://www.infoq.cn/feed",
+		"36氪 AI":   "https://36kr.com/feed",
+
+		// 互联网资讯（融资、市值、商业）
+		"TechCrunch": "https://techcrunch.com/feed/",
+		"The Information": "https://www.theinformation.com/feed",
+		"PitchBook": "https://pitchbook.com/news/feed",
+		"Crunchbase News": "https://news.crunchbase.com/feed/",
+		"CB Insights": "https://www.cbinsights.com/research/feed",
+		"Bloomberg Technology": "https://feeds.bloomberg.com/bloomberg/markets.rss",
+		"Reuters Technology": "https://www.reutersagency.com/feed/?taxonomy=markets&post_type=reuters-best",
+		"Financial Times": "https://www.ft.com/technology?format=rss",
+		"CNBC": "https://www.cnbc.com/id/19854910/device/rss/rss.html",
+		"MarketWatch": "https://feeds.marketwatch.com/marketwatch/topstories/",
+
+		// 中国商业资讯
+		"虎嗅": "https://www.huxiu.com/rss/0.xml",
+		"钛媒体": "https://www.tmtpost.com/feed",
+		"IT桔子": "https://www.itjuzi.com/feed",
+		"投资界": "https://www.pedaily.cn/rss/",
+		"创业邦": "https://www.cyzone.cn/feed",
+	},
 	}
 }
 
